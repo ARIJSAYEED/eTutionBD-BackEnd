@@ -27,6 +27,17 @@ async function runStableAPIConnect() {
         // Connect the client to the server (optional starting in v4.7)
         await client.connect();
 
+        const db = client.db("eTutionBD");
+        const usersCollection = db.collection("usersCollection");
+
+        // users-related api
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            console.log(user);
+            const result = await usersCollection.insertOne(user);
+            res.send(result)
+        })
+
         // Send a ping to confirm a successful connection
         const result = await client.db('admin').command({ ping: 1 });
         console.log(
