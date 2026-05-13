@@ -1,5 +1,6 @@
 const express = require('express')
 const cors = require('cors');
+require('dotenv').config()
 const app = express()
 const port = 3000
 
@@ -9,13 +10,13 @@ app.use(cors())
 app.get('/', (req, res) => {
     res.send('Hello World!')
 })
-
+console.log(`${process.env.DB_USER},${process.env.DB_PASS}`)
 // mongodb connection
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
 // const uri = `mongodb+srv://eTutionBD:s3Oln0LNdQKeSgte@cluster0.taazt4c.mongodb.net/?appName=Cluster0`;
 
-const uri = "mongodb://eTutionBD:s3Oln0LNdQKeSgte@ac-hcxuuhk-shard-00-00.taazt4c.mongodb.net:27017,ac-hcxuuhk-shard-00-01.taazt4c.mongodb.net:27017,ac-hcxuuhk-shard-00-02.taazt4c.mongodb.net:27017/?ssl=true&replicaSet=atlas-qgx1um-shard-0&authSource=admin&appName=Cluster0";
+const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@ac-hcxuuhk-shard-00-00.taazt4c.mongodb.net:27017,ac-hcxuuhk-shard-00-01.taazt4c.mongodb.net:27017,ac-hcxuuhk-shard-00-02.taazt4c.mongodb.net:27017/?ssl=true&replicaSet=atlas-qgx1um-shard-0&authSource=admin&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
