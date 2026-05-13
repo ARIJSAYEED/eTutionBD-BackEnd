@@ -10,11 +10,9 @@ app.use(cors())
 app.get('/', (req, res) => {
     res.send('Hello World!')
 })
-console.log(`${process.env.DB_USER},${process.env.DB_PASS}`)
 // mongodb connection
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
-// const uri = `mongodb+srv://eTutionBD:s3Oln0LNdQKeSgte@cluster0.taazt4c.mongodb.net/?appName=Cluster0`;
 
 const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@ac-hcxuuhk-shard-00-00.taazt4c.mongodb.net:27017,ac-hcxuuhk-shard-00-01.taazt4c.mongodb.net:27017,ac-hcxuuhk-shard-00-02.taazt4c.mongodb.net:27017/?ssl=true&replicaSet=atlas-qgx1um-shard-0&authSource=admin&appName=Cluster0`;
 
@@ -29,8 +27,21 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
+
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
+        const db = client.db("eTutionBD");
+        const userCollection = db.collection("users")
+
+        // user related apis 
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            console.log(user)
+            const result = await userCollection.insertOne(user);
+            res.send(result)
+        })
+
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
