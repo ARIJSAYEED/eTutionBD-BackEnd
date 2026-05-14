@@ -36,7 +36,10 @@ async function run() {
         // user related apis 
         app.post('/users', async (req, res) => {
             const user = req.body;
-            console.log(user)
+            if (!user.role) {
+                user.role = "student"
+            }
+            // console.log(user)
             const result = await userCollection.insertOne(user);
             res.send(result)
         })
