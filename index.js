@@ -32,6 +32,7 @@ async function run() {
         await client.connect();
         const db = client.db("eTutionBD");
         const userCollection = db.collection("users")
+        const tutionCollection = db.collection("tutions")
 
         // user related apis 
         app.post('/users', async (req, res) => {
@@ -41,6 +42,21 @@ async function run() {
             }
             // console.log(user)
             const result = await userCollection.insertOne(user);
+            res.send(result)
+        })
+
+        // tutions related apis 
+        app.post('/tutions', async (req, res) => {
+            const tution = req.body;
+            tution.tutionStatus = "pending";
+            const result = await tutionCollection.insertOne(tution);
+            res.send(result)
+        })
+
+        app.get('/tutions', async (req, res) => {
+            const query = {};
+            const cursor = tutionCollection.find(query);
+            const result = await cursor.toArray();
             res.send(result)
         })
 
