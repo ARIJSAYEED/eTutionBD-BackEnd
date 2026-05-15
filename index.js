@@ -40,10 +40,24 @@ async function run() {
             if (!user.role) {
                 user.role = "student"
             }
+            user.createdAt = new Date();
             // console.log(user)
             const result = await userCollection.insertOne(user);
             res.send(result)
         })
+
+        app.get('/users', async (req, res) => {
+            const role = req.query.role;
+            // console.log(role)
+            const query = {}
+            if (role) {
+                query.role = role
+            }
+            const cursor = userCollection.find(query).sort({createdAt:-1})
+            const result = await cursor.toArray();
+            res.send(result)
+        })
+
 
         // tutions related apis 
         app.post('/tutions', async (req, res) => {
@@ -62,10 +76,13 @@ async function run() {
             if (email) {
                 query.studentEmail = email
             }
-            const cursor = tutionCollection.find(query).sort({createdAt:-1});
+            const cursor = tutionCollection.find(query).sort({ createdAt: -1 });
             const result = await cursor.toArray();
             res.send(result)
         })
+
+        // tutor related apis
+
 
 
         // Send a ping to confirm a successful connection
