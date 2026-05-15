@@ -49,13 +49,20 @@ async function run() {
         app.post('/tutions', async (req, res) => {
             const tution = req.body;
             tution.tutionStatus = "pending";
+            tution.createdAt = new Date();
             const result = await tutionCollection.insertOne(tution);
             res.send(result)
         })
 
         app.get('/tutions', async (req, res) => {
+
+            const email = req.query.email;
+            // console.log(email)
             const query = {};
-            const cursor = tutionCollection.find(query);
+            if (email) {
+                query.studentEmail = email
+            }
+            const cursor = tutionCollection.find(query).sort({createdAt:-1});
             const result = await cursor.toArray();
             res.send(result)
         })
