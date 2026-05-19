@@ -12,7 +12,7 @@ app.get('/', (req, res) => {
 })
 // mongodb connection
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@ac-hcxuuhk-shard-00-00.taazt4c.mongodb.net:27017,ac-hcxuuhk-shard-00-01.taazt4c.mongodb.net:27017,ac-hcxuuhk-shard-00-02.taazt4c.mongodb.net:27017/?ssl=true&replicaSet=atlas-qgx1um-shard-0&authSource=admin&appName=Cluster0`;
 
@@ -33,6 +33,7 @@ async function run() {
         const db = client.db("eTutionBD");
         const userCollection = db.collection("users")
         const tutionCollection = db.collection("tutions")
+        const tutionApplicationsCollection = db.collection("tutionApplications")
 
         // user related apis 
         app.post('/users', async (req, res) => {
@@ -53,7 +54,7 @@ async function run() {
             if (role) {
                 query.role = role
             }
-            const cursor = userCollection.find(query).sort({createdAt:-1})
+            const cursor = userCollection.find(query).sort({ createdAt: -1 })
             const result = await cursor.toArray();
             res.send(result)
         })
@@ -81,7 +82,34 @@ async function run() {
             res.send(result)
         })
 
+        app.get('/tutions/:tutionId', async (req, res) => {
+            const tutionId = req.params.tutionId;
+            // console.log(tutionId)
+            const query = { _id: new ObjectId(tutionId) }
+            const result = await tutionCollection.findOne(query)
+            res.send(result)
+        })
+
         // tutor related apis
+
+        // tution-applications related api
+        app.post('/tutionApplications', async (req, res) => {
+            const tutionApplication = req.body;
+            console.log(tutionApplication)
+            const result = await tutionApplicationsCollection.insertOne(tutionApplication)
+            res.send(result)
+        })
+
+        // GET applications for a specific tuition
+        app.get('/tutionApplications', async (req, res) => {
+            const tutionId = req.query.tutionId;
+
+            const query = { tutionId: tutionId };
+            const cursor = tutionApplicationsCollection.find(query).sort({ createdAt: -1 });
+            const result = await cursor.toArray();
+
+            res.send(result);
+        });
 
 
 
