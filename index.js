@@ -90,11 +90,20 @@ async function run() {
             res.send(result)
         })
 
+        app.delete('/tutions/:tutionId', async (req, res) => {
+            const tutionId = req.params.tutionId;
+            console.log(tutionId)
+            const query = { _id: new ObjectId(tutionId) }
+            const result = await tutionCollection.deleteOne(query)
+            res.send(result)
+        })
+
         // tutor related apis
 
         // tution-applications related api
         app.post('/tutionApplications', async (req, res) => {
             const tutionApplication = req.body;
+            tutionApplication.appliedAt = new Date();
             console.log(tutionApplication)
             const result = await tutionApplicationsCollection.insertOne(tutionApplication)
             res.send(result)
