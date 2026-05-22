@@ -83,17 +83,25 @@ async function run() {
         })
 
         app.get('/tutions/:tutionId', async (req, res) => {
+
             const tutionId = req.params.tutionId;
+
             // console.log(tutionId)
             const query = { _id: new ObjectId(tutionId) }
+
             const result = await tutionCollection.findOne(query)
+            
             res.send(result)
         })
 
         app.delete('/tutions/:tutionId', async (req, res) => {
+
             const tutionId = req.params.tutionId;
-            console.log(tutionId)
+
+            // console.log(tutionId)
+
             const query = { _id: new ObjectId(tutionId) }
+
             const result = await tutionCollection.deleteOne(query)
             res.send(result)
         })
@@ -102,19 +110,37 @@ async function run() {
 
         // tution-applications related api
         app.post('/tutionApplications', async (req, res) => {
+
             const tutionApplication = req.body;
+
             tutionApplication.appliedAt = new Date();
-            console.log(tutionApplication)
+
+            // console.log(tutionApplication)
+
             const result = await tutionApplicationsCollection.insertOne(tutionApplication)
+
             res.send(result)
         })
 
         // GET applications for a specific tuition
         app.get('/tutionApplications', async (req, res) => {
-            const tutionId = req.query.tutionId;
 
-            const query = { tutionId: tutionId };
+            const tutionId = req.query.tutionId;
+            const studentEmail = req.query.studentEmail;
+            // console.log(studentEmail)
+
+            const query = {}
+
+            if (tutionId) {
+                query.tutionId = tutionId;
+            }
+
+            if (studentEmail) {
+                query.studentEmail = studentEmail
+            }
+
             const cursor = tutionApplicationsCollection.find(query).sort({ createdAt: -1 });
+
             const result = await cursor.toArray();
 
             res.send(result);
