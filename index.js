@@ -63,6 +63,7 @@ async function run() {
         // tutions related apis 
         app.post('/tutions', async (req, res) => {
             const tution = req.body;
+            tution.adminApproval = "pending";
             tution.tutionStatus = "pending";
             tution.createdAt = new Date();
             const result = await tutionCollection.insertOne(tution);
@@ -72,10 +73,14 @@ async function run() {
         app.get('/tutions', async (req, res) => {
 
             const email = req.query.email;
+            const adminApproval = req.query.adminApproval;
             // console.log(email)
             const query = {};
             if (email) {
                 query.studentEmail = email
+            }
+            if (adminApproval) {
+                query.adminApproval = adminApproval
             }
             const cursor = tutionCollection.find(query).sort({ createdAt: -1 });
             const result = await cursor.toArray();
@@ -90,7 +95,7 @@ async function run() {
             const query = { _id: new ObjectId(tutionId) }
 
             const result = await tutionCollection.findOne(query)
-            
+
             res.send(result)
         })
 
@@ -106,6 +111,24 @@ async function run() {
             res.send(result)
         })
 
+        app.patch('/tutions/:tutionId', async (req, res) => {
+
+            const tutionId = req.params.tutionId
+
+            const { adminApproval } = req.body
+
+            const query = { _id: new ObjectId(tutionId) }
+            
+            const updateInfo = {
+                $set: { adminApproval }
+            }
+
+            // console.log(query,updateInfo)
+
+            const result = await tutionCollection.updateOne(query, updateInfo)
+            res.send(result)
+        })
+
         // tutor related apis
 
         // tution-applications related api
@@ -114,6 +137,7 @@ async function run() {
             const tutionApplication = req.body;
 
             tutionApplication.appliedAt = new Date();
+            // tutionApplication.tutionStatus = "pending"
 
             // console.log(tutionApplication)
 
