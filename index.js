@@ -49,14 +49,28 @@ async function run() {
 
         app.get('/users', async (req, res) => {
             const role = req.query.role;
+            const email = req.query.email;
             // console.log(role)
             const query = {}
+
+            if (email) {
+                const result = await userCollection.findOne({ email });
+                return res.send(result);
+            }
+            
             if (role) {
                 query.role = role
             }
             const cursor = userCollection.find(query).sort({ createdAt: -1 })
             const result = await cursor.toArray();
             res.send(result)
+        })
+
+        app.delete('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await userCollection.deleteOne(query);
+            res.send(result);
         })
 
 
@@ -118,7 +132,7 @@ async function run() {
             const { adminApproval } = req.body
 
             const query = { _id: new ObjectId(tutionId) }
-            
+
             const updateInfo = {
                 $set: { adminApproval }
             }
