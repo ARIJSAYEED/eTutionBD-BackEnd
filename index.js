@@ -4,8 +4,38 @@ require('dotenv').config()
 const app = express()
 const port = 3000
 
+// firbase-adminSDK
+const admin = require("firebase-admin");
+const serviceAccount = require("./etutionbd-firebase-adminsdk.json");
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
+
+
+// middlewares
 app.use(express.json());
 app.use(cors())
+
+// custom middlewares
+const verifyFBtoken = async (req, res, next) => {
+
+    const token = req.headers.authorization;
+    // console.log(token)
+
+    if (!token) {
+        return res.status(401).send({ message: 'kire manger nati, ki korte chas' })
+    }
+    try {
+        const idToken = token.split(' ')[1]
+        const decoded = await admin.auth().verifyIdToken(idToken)
+        // console.log("decoded", decoded);
+        req.decoded_email = decoded.email
+        next();
+    }
+    catch (err) {
+        return res.status(401).send({ message: 'token not found for this user' })
+    }
+}
 
 app.get('/', (req, res) => {
     res.send('Hello World!')
@@ -57,7 +87,7 @@ async function run() {
                 const result = await userCollection.findOne({ email });
                 return res.send(result);
             }
-            
+
             if (role) {
                 query.role = role
             }
@@ -84,14 +114,18 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/tutions', async (req, res) => {
+        app.get('/tutions', verifyFBtoken, async (req, res) => {
 
             const email = req.query.email;
             const adminApproval = req.query.adminApproval;
             // console.log(email)
             const query = {};
+
             if (email) {
                 query.studentEmail = email
+                if (email !== req.decoded_email) {
+                    return res.status(403).send({ message: 'forbidden access' })
+                }
             }
             if (adminApproval) {
                 query.adminApproval = adminApproval
