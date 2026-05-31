@@ -122,7 +122,7 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/tutions', verifyFBtoken, async (req, res) => {
+        app.get('/tutions', async (req, res) => {
 
             const email = req.query.email;
             const adminApproval = req.query.adminApproval;
