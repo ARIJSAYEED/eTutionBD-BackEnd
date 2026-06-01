@@ -3,18 +3,15 @@ const cors = require('cors');
 require('dotenv').config()
 const app = express()
 const port = 3000
+const stripe = require('stripe')(process.env.STRIPE_SECRET);
+
 
 // firbase-adminSDK
 const admin = require("firebase-admin");
-
-// const serviceAccount = require("./etutionbd-firebase-adminsdk.json");
-
+// const serviceAccount = require("./etuitionbd-firebase-adminsdk.json");
 // const serviceAccount = require("./firebase-admin-key.json");
-
 const decoded = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString('utf8')
 const serviceAccount = JSON.parse(decoded);
-
-
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
@@ -31,7 +28,7 @@ const verifyFBtoken = async (req, res, next) => {
     // console.log(token)
 
     if (!token) {
-        return res.status(401).send({ message: 'kire manger nati, ki korte chas' })
+        return res.status(401).send({ message: 'unauthorize access' })
     }
     try {
         const idToken = token.split(' ')[1]
@@ -41,7 +38,7 @@ const verifyFBtoken = async (req, res, next) => {
         next();
     }
     catch (err) {
-        return res.status(401).send({ message: 'token not found for this user' })
+        return res.status(401).send({ message: 'unauthorize access' })
     }
 }
 
@@ -68,10 +65,10 @@ async function run() {
 
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
-        const db = client.db("eTutionBD");
+        const db = client.db("etuitionBD");
         const userCollection = db.collection("users")
-        const tutionCollection = db.collection("tutions")
-        const tutionApplicationsCollection = db.collection("tutionApplications")
+        const tuitionCollection = db.collection("tuitions")
+        const tuitionApplicationsCollection = db.collection("tuitionApplications")
 
         // user related apis 
         app.post('/users', async (req, res) => {
@@ -112,17 +109,17 @@ async function run() {
         })
 
 
-        // tutions related apis 
-        app.post('/tutions', async (req, res) => {
-            const tution = req.body;
-            tution.adminApproval = "pending";
-            tution.tutionStatus = "pending";
-            tution.createdAt = new Date();
-            const result = await tutionCollection.insertOne(tution);
+        // tuitions related apis 
+        app.post('/tuitions', async (req, res) => {
+            const tuition = req.body;
+            tuition.adminApproval = "pending";
+            tuition.tuitionStatus = "pending";
+            tuition.createdAt = new Date();
+            const result = await tuitionCollection.insertOne(tuition);
             res.send(result)
         })
 
-        app.get('/tutions', async (req, res) => {
+        app.get('/tuitions', verifyFBtoken, async (req, res) => {
 
             const email = req.query.email;
             const adminApproval = req.query.adminApproval;
@@ -138,42 +135,42 @@ async function run() {
             if (adminApproval) {
                 query.adminApproval = adminApproval
             }
-            const cursor = tutionCollection.find(query).sort({ createdAt: -1 });
+            const cursor = tuitionCollection.find(query).sort({ createdAt: -1 });
             const result = await cursor.toArray();
             res.send(result)
         })
 
-        app.get('/tutions/:tutionId', async (req, res) => {
+        app.get('/tuitions/:tuitionId', async (req, res) => {
 
-            const tutionId = req.params.tutionId;
+            const tuitionId = req.params.tuitionId;
 
-            // console.log(tutionId)
-            const query = { _id: new ObjectId(tutionId) }
+            // console.log(tuitionId)
+            const query = { _id: new ObjectId(tuitionId) }
 
-            const result = await tutionCollection.findOne(query)
+            const result = await tuitionCollection.findOne(query)
 
             res.send(result)
         })
 
-        app.delete('/tutions/:tutionId', async (req, res) => {
+        app.delete('/tuitions/:tuitionId', async (req, res) => {
 
-            const tutionId = req.params.tutionId;
+            const tuitionId = req.params.tuitionId;
 
-            // console.log(tutionId)
+            // console.log(tuitionId)
 
-            const query = { _id: new ObjectId(tutionId) }
+            const query = { _id: new ObjectId(tuitionId) }
 
-            const result = await tutionCollection.deleteOne(query)
+            const result = await tuitionCollection.deleteOne(query)
             res.send(result)
         })
 
-        app.patch('/tutions/:tutionId', async (req, res) => {
+        app.patch('/tuitions/:tuitionId', async (req, res) => {
 
-            const tutionId = req.params.tutionId
+            const tuitionId = req.params.tuitionId
 
             const { adminApproval } = req.body
 
-            const query = { _id: new ObjectId(tutionId) }
+            const query = { _id: new ObjectId(tuitionId) }
 
             const updateInfo = {
                 $set: { adminApproval }
@@ -181,54 +178,104 @@ async function run() {
 
             // console.log(query,updateInfo)
 
-            const result = await tutionCollection.updateOne(query, updateInfo)
+            const result = await tuitionCollection.updateOne(query, updateInfo)
             res.send(result)
         })
 
         // tutor related apis
 
-        // tution-applications related api
-        app.post('/tutionApplications', async (req, res) => {
+        // tuition-applications related api
+        app.post('/tuitionApplications', async (req, res) => {
 
-            const tutionApplication = req.body;
+            const tuitionApplication = req.body;
 
-            tutionApplication.appliedAt = new Date();
-            // tutionApplication.tutionStatus = "pending"
+            tuitionApplication.appliedAt = new Date();
+            // tuitionApplication.tuitionStatus = "pending"
 
-            // console.log(tutionApplication)
+            // console.log(tuitionApplication)
 
-            const result = await tutionApplicationsCollection.insertOne(tutionApplication)
+            const result = await tuitionApplicationsCollection.insertOne(tuitionApplication)
 
             res.send(result)
         })
 
         // GET applications for a specific tuition
-        app.get('/tutionApplications', async (req, res) => {
+        app.get('/tuitionApplications', async (req, res) => {
 
-            const tutionId = req.query.tutionId;
+            const tuitionId = req.query.tuitionId;
             const studentEmail = req.query.studentEmail;
             // console.log(studentEmail)
 
             const query = {}
 
-            if (tutionId) {
-                query.tutionId = tutionId;
+            if (tuitionId) {
+                query.tuitionId = tuitionId;
             }
 
             if (studentEmail) {
                 query.studentEmail = studentEmail
             }
 
-            const cursor = tutionApplicationsCollection.find(query).sort({ createdAt: -1 });
+            const cursor = tuitionApplicationsCollection.find(query).sort({ createdAt: -1 });
 
             const result = await cursor.toArray();
 
             res.send(result);
         });
 
+        // payment related apis
+        app.post('/create-checkout-session', async (req, res) => {
+            const paymentInfo = req.body;
+            const amount = parseInt(paymentInfo.expectedSalary) * 100
+
+            const session = await stripe.checkout.sessions.create({
+                line_items: [
+                    {
+                        price_data: {
+                            currency: "USD",
+                            product_data: {
+                                name: paymentInfo.classGrade
+                            },
+                            unit_amount: amount,
+                        },
+                        quantity: 1,
+                    },
+                ],
+                customer_email: paymentInfo.studentEmail,
+                mode: 'payment',
+                metadata: {
+                    tuitionId: paymentInfo.tuitionId
+                },
+                success_url: `${process.env.SITE_DOMAIN}/dashboard/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+                cancel_url: `${process.env.SITE_DOMAIN}/dashboard/payment-cancelled`,
+            })
+            console.log(session)
+            res.send({ url: session.url })
+        })
+
+        app.patch('/payment-success', async (req, res) => {
+            const sessionId = req.query.session_id
+            const session = await stripe.checkout.sessions.retrieve(sessionId)
+            console.log("session is-", session)
+            console.log("metadata:", session.metadata)
+            if (session.payment_status === "paid") {
+                const id = session.metadata.tuitionId;
+                const query = { _id: new ObjectId(id) }
+                const update = {
+                    $set: {
+                        paymentStatus: 'paid',
+
+                    }
+                }
+                const result = await tuitionCollection.updateOne(query, update)
+                res.send(result)
+            }
+            res.send({ success: false })
+        })
 
 
         // Send a ping to confirm a successful connection
+
         // await client.db("admin").command({ ping: 1 });
         // console.log("Pinged your deployment. You successfully connected to MongoDB!");
 

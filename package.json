@@ -1,5 +1,5 @@
 {
-  "name": "etutionbd-backend",
+  "name": "etuitionbd-backend",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,22 +9,23 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ARIJSAYEED/eTutionBD-BackEnd.git"
+    "url": "git+https://github.com/ARIJSAYEED/etuitionBD-BackEnd.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/ARIJSAYEED/eTutionBD-BackEnd/issues"
+    "url": "https://github.com/ARIJSAYEED/etuitionBD-BackEnd/issues"
   },
-  "homepage": "https://github.com/ARIJSAYEED/eTutionBD-BackEnd#readme",
+  "homepage": "https://github.com/ARIJSAYEED/etuitionBD-BackEnd#readme",
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "firebase-admin": "^13.10.0",
     "mongodb": "^7.2.0",
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "stripe": "^22.2.0"
   }
 }
