@@ -119,7 +119,7 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/tuitions', verifyFBtoken, async (req, res) => {
+        app.get('/tuitions', async (req, res) => {
 
             const email = req.query.email;
             const adminApproval = req.query.adminApproval;
@@ -128,9 +128,9 @@ async function run() {
 
             if (email) {
                 query.studentEmail = email
-                if (email !== req.decoded_email) {
-                    return res.status(403).send({ message: 'forbidden access' })
-                }
+                // if (email !== req.decoded_email) {
+                //     return res.status(403).send({ message: 'forbidden access' })
+                // }
             }
             if (adminApproval) {
                 query.adminApproval = adminApproval
