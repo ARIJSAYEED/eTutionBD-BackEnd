@@ -69,6 +69,7 @@ async function run() {
         const userCollection = db.collection("users")
         const tuitionCollection = db.collection("tuitions")
         const tuitionApplicationsCollection = db.collection("tuitionApplications")
+        const paymentCollection = db.collection('payments')
 
         // user related apis 
         app.post('/users', async (req, res) => {
@@ -106,6 +107,13 @@ async function run() {
             const query = { _id: new ObjectId(id) };
             const result = await userCollection.deleteOne(query);
             res.send(result);
+        })
+
+        app.get('/users/:email/role', async (req, res) => {
+            const email = req.params.email;
+            const query = { email };
+            const user = await userCollection.findOne(query);
+            res.send({ role: user?.role || 'student' });
         })
 
 
@@ -258,17 +266,38 @@ async function run() {
             const session = await stripe.checkout.sessions.retrieve(sessionId)
             console.log("session is-", session)
             console.log("metadata:", session.metadata)
+
             if (session.payment_status === "paid") {
                 const id = session.metadata.tuitionId;
                 const query = { _id: new ObjectId(id) }
                 const update = {
                     $set: {
                         paymentStatus: 'paid',
-
+                        tuitionStatus: "tutorBooked"
                     }
                 }
-                const result = await tuitionCollection.updateOne(query, update)
-                res.send(result)
+                const result = await tuitionCollection.updateOne(query, update);
+
+                const payment = {
+                    amount: session.amount_total / 100,
+                    currency: session.currency,
+                    customerEmail: session.customer_email,
+                    tuitionId: session.metadata.tuitionId,
+                    transactionId: session.payment_intent,
+                    paymentStatus: session.payment_status,
+                    paidAt: new Date(),
+                }
+
+                if (session.payment_status === "paid") {
+                    const resultPayment = await paymentCollection.insertOne(payment)
+                    res.send({
+                        success: true,
+                        modifyParcel: result,
+                        transactionId: session.payment_intent,
+                        paymentInfo: resultPayment
+                    })
+                }
+
             }
             res.send({ success: false })
         })
