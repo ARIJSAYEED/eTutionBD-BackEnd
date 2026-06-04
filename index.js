@@ -275,8 +275,15 @@ async function run() {
         app.patch('/payment-success', async (req, res) => {
             const sessionId = req.query.session_id
             const session = await stripe.checkout.sessions.retrieve(sessionId)
-            console.log("session is-", session)
-            console.log("metadata:", session.metadata)
+            // console.log("session is-", session)
+            // console.log("metadata:", session.metadata)
+
+            const transactionId = session.payment_intent;
+            const query = { transactionId: transactionId }
+            const paymentExist = await paymentCollection.findOne(query)
+            if (paymentExist) {
+                return res.send({ message: 'already exists', transactionId })
+            }
 
             if (session.payment_status === "paid") {
                 const id = session.metadata.tuitionId;
@@ -311,6 +318,19 @@ async function run() {
 
             }
             res.send({ success: false })
+        })
+
+        app.get('/payments', async (req, res) => {
+            const email = req.query.email;
+            // console.log(email)
+            const query = {}
+            if (email) {
+                query.customerEmail = email
+            }
+            const cursor = paymentCollection.find(query).sort({ paidAt: -1 });
+
+            const result = await cursor.toArray();
+            res.send(result)
         })
 
 
