@@ -191,6 +191,17 @@ async function run() {
         })
 
         // tutor related apis
+        app.get('/applied-tuitions', async (req, res) => {
+            const email = req.query.email;
+            // console.log(email)
+            const query = {}
+            if (email) {
+                query.tutorEmail = email
+            }
+            const cursor = tuitionApplicationsCollection.find(query)
+            const result = await cursor.toArray();
+            res.send(result)
+        })
 
         // tuition-applications related api
         app.post('/tuitionApplications', async (req, res) => {
