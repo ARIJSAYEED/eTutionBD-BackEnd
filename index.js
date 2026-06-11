@@ -96,6 +96,7 @@ async function run() {
         app.get('/users', async (req, res) => {
             const role = req.query.role;
             const email = req.query.email;
+            const limit = req.query.limit ? parseInt(req.query.limit) : 0;
             // console.log(role)
             const query = {}
 
@@ -106,7 +107,7 @@ async function run() {
             if (role) {
                 query.role = role
             }
-            const cursor = userCollection.find(query).sort({ createdAt: -1 })
+            const cursor = userCollection.find(query).sort({ createdAt: -1 }).limit(limit);
             const result = await cursor.toArray();
             res.send(result)
         })
@@ -155,6 +156,8 @@ async function run() {
 
             const email = req.query.email;
             const adminApproval = req.query.adminApproval;
+            const limit = req.query.limit ? parseInt(req.query.limit) : 0;
+
             // console.log(email)
             const query = {};
 
@@ -167,7 +170,7 @@ async function run() {
             if (adminApproval) {
                 query.adminApproval = adminApproval
             }
-            const cursor = tuitionCollection.find(query).sort({ createdAt: -1 });
+            const cursor = tuitionCollection.find(query).sort({ createdAt: -1 }).limit(limit);
             const result = await cursor.toArray();
             res.send(result)
         })
