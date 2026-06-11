@@ -71,6 +71,16 @@ async function run() {
         const tuitionApplicationsCollection = db.collection("tuitionApplications")
         const paymentCollection = db.collection('payments')
 
+        const verifyAdmin = async (req, res, next) => {
+            const email = req.decoded_email;
+            const query = { email }
+            const user = await userCollection.findOne(query)
+            if (!user || user.role !== 'admin') {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            next()
+        }
+
         // user related apis 
         app.post('/users', async (req, res) => {
             const user = req.body;
@@ -93,7 +103,6 @@ async function run() {
                 const result = await userCollection.findOne({ email });
                 return res.send(result);
             }
-
             if (role) {
                 query.role = role
             }
@@ -114,6 +123,21 @@ async function run() {
             const query = { email };
             const user = await userCollection.findOne(query);
             res.send({ role: user?.role || 'student' });
+        })
+
+        app.patch('/users/:id/role', verifyFBtoken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const roleInfo = req.body;
+            const updatedDoc = {
+                $set: {
+                    role: roleInfo.role
+                }
+            }
+            // console.log(update)
+            // console.log(id)
+            const result = await userCollection.updateOne(query, updatedDoc)
+            res.send(result)
         })
 
 
